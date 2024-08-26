@@ -9,7 +9,7 @@ export class BinaryWriter {
   }
 
   public get data() {
-    return this.buf.subarray(0, this.position_ptr + 1);
+    return this.buf.subarray(0, this.position_ptr);
   }
 
   public get length() {

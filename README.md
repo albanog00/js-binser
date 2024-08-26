@@ -24,7 +24,7 @@ An example of serialized object:
 
     <Buffer 05 00 04 02 04 6e 61 6d 65 00 05 50 65 70 70 65 01 03 61 67 65 00
     00 00 17 04 06 67 72 61 64 65 73 01 00 08 00 00 00 00 00 00 00 01 00 00 00 
-    ff ff ff ... 29 more bytes>
+    ff ff ff ... 28 more bytes>
 
 As a json string this would be: 
 

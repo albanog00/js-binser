@@ -10,12 +10,6 @@ enum PropertyType {
 }
 
 export class BinarySerializer {
-  private static not_supported = new Set<string>([
-    "undefined",
-    "symbol",
-    "function",
-  ]);
-
   private static readBuffer(buffer: BinaryReader, type?: PropertyType): any {
     if (!type) type = buffer.readUInt8();
 
@@ -84,6 +78,7 @@ export class BinarySerializer {
     obj: any,
     key?: string,
     obj_is_array: boolean = false,
+    nested_level: number = 0,
   ) {
     switch (typeof obj) {
       case "object":
@@ -97,13 +92,15 @@ export class BinarySerializer {
 
           break;
         } else {
+          if (nested_level === 3) return undefined;
+
           const props = Object.keys(obj);
 
           this.appendInfo(buf, PropertyType.object, obj_is_array, key);
           buf.writeUInt16BE(props.length);
 
           for (const prop of props)
-            this.writeBuffer(buf, obj[prop], prop, false);
+            this.writeBuffer(buf, obj[prop], prop, false, nested_level + 1);
 
           break;
         }
@@ -132,11 +129,8 @@ export class BinarySerializer {
   }
 
   static encode(obj: any): Buffer | undefined {
-    if (this.not_supported.has(typeof obj)) return;
-
     const buf = new BinaryWriter(128);
     this.writeBuffer(buf, obj);
-
     return buf.data;
   }
 }

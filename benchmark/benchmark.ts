@@ -14,7 +14,7 @@ const person = new Person("Peppe", 23, [
 
 console.log("Benchmarking...");
 
-const bytes = BinarySerializer.encode(person).data;
+const bytes = BinarySerializer.encode(person);
 const json = JSON.stringify(person);
 
 console.time("json.serialize");

@@ -54,6 +54,8 @@ As a json string this would be:
       "isAdult": true
     }
 
+
+
     [ 5, 4, 0 ] this values identify the main type as 0x05 (object) with size 0x0400 (4 in little endian) 
 
     [ 2, 4, 110, 97, 109, 101 ] here says that has a property type 0x02 (string) with prop_size 0x04 and prop_name (110, 97, 109, 101)

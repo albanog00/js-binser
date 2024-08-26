@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "tsc && node dist/src/index.js",
-    "benchmark": "tsc && node --prof dist/benchmark/benchmark.js"
+    "benchmark": "tsc && node dist/benchmark/benchmark.js"
   },
   "devDependencies": {
     "@types/node": "^22.5.0",

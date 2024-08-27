@@ -24,7 +24,7 @@ export class BinaryWriter {
 
   public writeUInt8(val: number) {
     assert(
-      val < 255 || val > 0,
+      val <= 255 || val >= 0,
       `Invalid UInt8 value: ${val}. Must be 0 <= val <= 255`,
     );
 
@@ -35,7 +35,7 @@ export class BinaryWriter {
 
   public writeUInt16BE(val: number) {
     assert(
-      val < 65535 || val > 0,
+      val <= 65535 || val >= 0,
       `Invalid UInt16 value: ${val}. Must be 0 <= val <= 65535`,
     );
 
@@ -46,7 +46,7 @@ export class BinaryWriter {
 
   public writeUInt32BE(val: number) {
     assert(
-      val < 4_294_967_295 || val > 0,
+      val <= 4_294_967_295 || val >= 0,
       `Invalid UInt32 value: ${val}. Must be 0 <= val <= 4_294_967_295`,
     );
 
@@ -57,7 +57,7 @@ export class BinaryWriter {
 
   public writeInt8(val: number) {
     assert(
-      val < 127 || val > -128,
+      val <= 127 || val >= -128,
       `Invalid Int8 value: ${val}. Must be -128 <= val <= 127`,
     );
 
@@ -68,7 +68,7 @@ export class BinaryWriter {
 
   public writeInt16BE(val: number) {
     assert(
-      val < 32767 || val > -32678,
+      val <= 32767 || val >= -32678,
       `Invalid Int16 value: ${val}. Must be -32678 <= val <= 32677`,
     );
 
@@ -79,7 +79,7 @@ export class BinaryWriter {
 
   public writeInt32BE(val: number) {
     assert(
-      val < 2_147_483_647 || val > -2_147_483_648,
+      val <= 2_147_483_647 || val >= -2_147_483_648,
       `Invalid Int32 value: ${val}. Must be -2_147_483_648 <= val <= 2_147_483_647`,
     );
 

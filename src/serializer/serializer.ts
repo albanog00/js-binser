@@ -16,7 +16,7 @@ export class BinarySerializer {
     switch (type) {
       case PropertyType.array:
         const array_type = buffer.readUInt8();
-        var size = buffer.readUInt16BE();
+        var size = buffer.readUInt32BE();
         const arr = new Array(size);
 
         for (let i = 0; i < size; ++i) {
@@ -85,7 +85,7 @@ export class BinarySerializer {
         if (obj instanceof Array) {
           this.appendInfo(buf, PropertyType.array, obj_is_array, key);
           buf.writeUInt8(PropertyType[typeof obj[0]]);
-          buf.writeUInt16BE(obj.length);
+          buf.writeUInt32BE(obj.length);
 
           for (const element of obj)
             this.writeBuffer(buf, element, undefined, true);

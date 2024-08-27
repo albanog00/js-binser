@@ -129,7 +129,7 @@ export class BinarySerializer {
   }
 
   static encode(obj: any): Buffer | undefined {
-    const buf = new BinaryWriter(128);
+    const buf = new BinaryWriter();
     this.writeBuffer(buf, obj);
     return buf.data;
   }

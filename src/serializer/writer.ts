@@ -3,7 +3,7 @@ export class BinaryWriter {
   private curr_size: number;
   private position_ptr = 0;
 
-  constructor(size: number) {
+  constructor(size: number = 1024) {
     this.curr_size = size;
     this.buf = Buffer.alloc(size);
   }
@@ -105,7 +105,7 @@ export class BinaryWriter {
 
   private resizeIfNeeded(new_position: number) {
     if (new_position >= this.curr_size) {
-      this.resize(Math.max(128, new_position - this.curr_size + 1));
+      this.resize(Math.max(1024, new_position - this.curr_size + 1));
     }
   }
 }

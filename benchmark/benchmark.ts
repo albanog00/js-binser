@@ -1,38 +1,101 @@
 import { BinarySerializer } from "../src/serializer/serializer";
 import { Person } from "../src/person";
 
-const person = new Person("Peppe", 23, [
-  0,
-  1,
-  (1 << 8) - 1,
-  -1,
-  (1 << 16) - 1,
-  Math.pow(2, 31) - 1,
-  -Math.pow(2, 16),
-  -Math.pow(2, 31) + 1,
-]);
+console.log("Creating objects...");
 
-console.log("Benchmarking...");
+const person = new Person(
+  "Peppe",
+  23,
+  new Array<number>(10000).fill(Math.pow(2, 31) - 1),
+);
 
-const bytes = BinarySerializer.encode(person);
-const json = JSON.stringify(person);
+const lengthTestArray = 10000;
+const iterations = 10;
+const innerIterations = 1;
 
-console.time("json.serialize");
-for (let j = 0; j < 100; ++j)
-  for (let i = 0; i < 100_000; ++i) JSON.stringify(person);
-console.timeEnd("json.serialize");
+const personArray = new Array<Person>(lengthTestArray).fill(person);
+const jsonArray = new Array<string>(lengthTestArray).fill(
+  JSON.stringify(person),
+);
+const bytesArray = new Array<Buffer>(lengthTestArray).fill(
+  BinarySerializer.encode(person),
+);
 
-console.time("json.deserialize");
-for (let j = 0; j < 100; ++j)
-  for (let i = 0; i < 100_000; ++i) JSON.parse(json);
-console.timeEnd("json.deserialize");
+console.log("Starting benchmark...");
 
-console.time("binary.serialize");
-for (let j = 0; j < 100; ++j)
-  for (let i = 0; i < 100_000; ++i) BinarySerializer.encode(person);
-console.timeEnd("binary.serialize");
+function Benchmark(label: string, fn: () => void): number {
+  let totalTime: number = 0;
 
-console.time("binary.deserialize");
-for (let j = 0; j < 100; ++j)
-  for (let i = 0; i < 100_000; ++i) BinarySerializer.decode(bytes);
-console.timeEnd("binary.deserialize");
+  for (let j = 0; j < iterations; ++j) {
+    const start = Date.now();
+
+    for (let i = 0; i < innerIterations; ++i) fn();
+
+    const end = Date.now();
+    const executionTime = end - start;
+
+    totalTime += executionTime;
+
+    console.log(`Execution time for ${label}: ${executionTime}ms`);
+  }
+
+  return totalTime;
+}
+
+const jsonSerTotal = Benchmark("json serializer", () => {
+  for (const person of personArray) JSON.stringify(person);
+});
+
+console.log("\n");
+
+const jsonDeTotal = Benchmark("json deserializer", () => {
+  for (const json of jsonArray) JSON.parse(json);
+});
+
+console.log("\n");
+
+const binarySerTotal = Benchmark("binary serializer", () => {
+  for (const person of personArray) BinarySerializer.encode(person);
+});
+
+console.log("\n");
+
+const binaryDeTotal = Benchmark("binary deserializer", () => {
+  for (const bytes of bytesArray) BinarySerializer.decode(bytes);
+});
+
+console.log("\n");
+console.log(" --------------------------- ");
+console.log("\n");
+
+console.log(
+  `json serializer \ttotal time ${jsonSerTotal}ms \tavg time: ${
+    jsonSerTotal / iterations
+  }ms \top/s: ${
+    jsonSerTotal / (iterations * innerIterations * lengthTestArray)
+  }ms`,
+);
+
+console.log(
+  `json deserializer \ttotal time ${jsonDeTotal}ms \tavg time: ${
+    jsonDeTotal / iterations
+  }ms \top/s: ${
+    jsonDeTotal / (iterations * innerIterations * lengthTestArray)
+  }ms`,
+);
+
+console.log(
+  `binary serializer \ttotal time ${binarySerTotal}ms \tavg time: ${
+    binarySerTotal / iterations
+  }ms \top/s: ${
+    binarySerTotal / (iterations * innerIterations * lengthTestArray)
+  }ms`,
+);
+
+console.log(
+  `binary deserializer \ttotal time ${binaryDeTotal}ms \tavg time: ${
+    binaryDeTotal / iterations
+  }ms \top/s: ${
+    binaryDeTotal / (iterations * innerIterations * lengthTestArray)
+  }ms`,
+);

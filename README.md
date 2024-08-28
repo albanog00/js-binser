@@ -59,3 +59,13 @@ The output of the deserialization process will be this:
       isAdult: true
     }
 
+# TODO
+
+- [ ] Add numerical types (UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64)
+- [ ] Add maps support (e.g `Map<string, string>`)
+- [ ] Add UTF-8 support for strings (currently only supports ASCII)
+- [X] Explore other ways to deserialize (DataView)
+- [X] Avoid reallocation of buffer with subarray on `BinaryWriter.grow`
+- [ ] Write tests
+
+

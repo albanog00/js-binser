@@ -6,10 +6,10 @@ console.log("Creating objects...");
 const person = new Person(
   "Peppe",
   23,
-  new Array<number>(65534).fill(Math.pow(2, 31) - 1),
+  new Array<number>(1_000_000).fill(1),
 );
 
-const lengthTestArray = 100;
+const lengthTestArray = 10;
 const iterations = 10;
 const innerIterations = 1;
 

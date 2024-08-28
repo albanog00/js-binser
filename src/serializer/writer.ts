@@ -1,24 +1,23 @@
-import assert = require("node:assert");
+import assert = require("assert");
 
 export class BinaryWriter {
-  private buf: Buffer;
-  private curr_size: number;
+  private bufs: Buffer[];
   private position_ptr = 0;
+  private curr_buf_index = 0;
 
-  private readonly grow_size = 1 << 20; // 1 MB
+  private readonly grow_size = 8192; // 8 kb
 
-  constructor(size?: number) {
-    size ??= this.grow_size;
-    this.curr_size = size;
-    this.buf = Buffer.alloc(size);
+  constructor() {
+    this.bufs = [];
+    this.bufs.push(Buffer.alloc(this.grow_size));
   }
 
   public get data() {
-    return this.buf.subarray(0, this.position_ptr);
+    return Buffer.concat(this.bufs);
   }
 
   public get length() {
-    return this.curr_size;
+    return this.curr_buf_index * this.grow_size + this.position_ptr;
   }
 
   public get position() {
@@ -31,10 +30,9 @@ export class BinaryWriter {
       `Invalid UInt8 value: ${val}. Must be 0 <= val <= 255`,
     );
 
-    const new_position = this.position_ptr + 1;
-    this.growIfNeeded(new_position);
-    this.buf.writeUInt8(val, this.position_ptr);
-    this.position_ptr = new_position;
+    this.growIfNeeded(this.position_ptr + 1);
+    this.bufs[this.curr_buf_index].writeUInt8(val, this.position_ptr);
+    this.position_ptr += 1;
   }
 
   public writeUInt16BE(val: number) {
@@ -45,7 +43,7 @@ export class BinaryWriter {
 
     const new_position = this.position_ptr + 2;
     this.growIfNeeded(new_position);
-    this.buf.writeUInt16BE(val, this.position_ptr);
+    this.bufs[this.curr_buf_index].writeUInt16BE(val, this.position_ptr);
     this.position_ptr = new_position;
   }
 
@@ -55,10 +53,9 @@ export class BinaryWriter {
       `Invalid UInt32 value: ${val}. Must be 0 <= val <= 4_294_967_295`,
     );
 
-    const new_position = this.position_ptr + 4;
-    this.growIfNeeded(new_position);
-    this.buf.writeUInt32BE(val, this.position_ptr);
-    this.position_ptr = new_position;
+    this.growIfNeeded(this.position_ptr + 4);
+    this.bufs[this.curr_buf_index].writeUInt32BE(val, this.position_ptr);
+    this.position_ptr += 4;
   }
 
   public writeInt8(val: number) {
@@ -67,10 +64,9 @@ export class BinaryWriter {
       `Invalid Int8 value: ${val}. Must be -128 <= val <= 127`,
     );
 
-    const new_position = this.position_ptr + 1;
-    this.growIfNeeded(new_position);
-    this.buf.writeInt8(val, this.position_ptr);
-    this.position_ptr = new_position;
+    this.growIfNeeded(this.position_ptr + 1);
+    this.bufs[this.curr_buf_index].writeInt8(val, this.position_ptr);
+    this.position_ptr += 1;
   }
 
   public writeInt16BE(val: number) {
@@ -81,7 +77,7 @@ export class BinaryWriter {
 
     const new_position = this.position_ptr + 2;
     this.growIfNeeded(new_position);
-    this.buf.writeInt16BE(val, this.position_ptr);
+    this.bufs[this.curr_buf_index].writeInt16BE(val, this.position_ptr);
     this.position_ptr = new_position;
   }
 
@@ -91,36 +87,38 @@ export class BinaryWriter {
       `Invalid Int32 value: ${val}. Must be -2_147_483_648 <= val <= 2_147_483_647`,
     );
 
-    const new_position = this.position_ptr + 4;
-    this.growIfNeeded(new_position);
-    this.buf.writeInt32BE(val, this.position_ptr);
-    this.position_ptr = new_position;
+    this.growIfNeeded(this.position_ptr + 4);
+    this.bufs[this.curr_buf_index].writeInt32BE(val, this.position_ptr);
+    this.position_ptr += 4;
   }
 
   public writeBoolean(val: boolean) {
-    const new_position = this.position_ptr + 1;
-    this.growIfNeeded(new_position);
-    this.buf.writeUint8(val ? 1 : 0, this.position_ptr);
-    this.position_ptr = new_position;
+    this.growIfNeeded(this.position_ptr + 1);
+    this.bufs[this.curr_buf_index].writeUint8(val ? 1 : 0, this.position_ptr);
+    this.position_ptr += 1;
   }
 
+  // FIXME: if it receives a string that length is more than `grow_size` it
+  // infinite loops
   public writeString(str: string) {
-    const new_position = this.position_ptr + str.length;
-    this.growIfNeeded(new_position);
-    this.buf.write(str, this.position_ptr);
-    this.position_ptr = new_position;
+    this.growIfNeeded(this.position_ptr + str.length);
+    this.bufs[this.curr_buf_index].write(str, this.position_ptr);
+    this.position_ptr += str.length;
   }
 
-  public grow(size: number) {
-    this.curr_size = this.curr_size + size;
-    const buffer = Buffer.alloc(this.curr_size);
-    this.buf.copy(buffer);
-    this.buf = buffer;
+  public grow() {
+    this.bufs.push(Buffer.alloc(this.grow_size));
+    ++this.curr_buf_index;
+    this.position_ptr = 0;
   }
 
   private growIfNeeded(new_position: number) {
-    if (new_position >= this.curr_size) {
-      this.grow(Math.max(this.grow_size, new_position - this.curr_size + 1));
+    if (new_position >= this.grow_size) {
+      this.bufs[this.curr_buf_index] = this.bufs[this.curr_buf_index].subarray(
+        0,
+        this.position_ptr,
+      );
+      this.grow();
     }
   }
 }

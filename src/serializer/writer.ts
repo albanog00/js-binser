@@ -1,11 +1,14 @@
-import assert = require("assert");
+import assert = require("node:assert");
 
 export class BinaryWriter {
   private buf: Buffer;
   private curr_size: number;
   private position_ptr = 0;
 
-  constructor(size: number = 1024) {
+  private readonly grow_size = 1024;
+
+  constructor(size?: number) {
+    size ??= this.grow_size;
     this.curr_size = size;
     this.buf = Buffer.alloc(size);
   }
@@ -28,9 +31,10 @@ export class BinaryWriter {
       `Invalid UInt8 value: ${val}. Must be 0 <= val <= 255`,
     );
 
-    this.resizeIfNeeded(this.position_ptr + 1);
+    const new_position = this.position_ptr + 1;
+    this.growIfNeeded(new_position);
     this.buf.writeUInt8(val, this.position_ptr);
-    this.position_ptr += 1;
+    this.position_ptr = new_position;
   }
 
   public writeUInt16BE(val: number) {
@@ -39,9 +43,10 @@ export class BinaryWriter {
       `Invalid UInt16 value: ${val}. Must be 0 <= val <= 65535`,
     );
 
-    this.resizeIfNeeded(this.position_ptr + 2);
+    const new_position = this.position_ptr + 2;
+    this.growIfNeeded(new_position);
     this.buf.writeUInt16BE(val, this.position_ptr);
-    this.position_ptr += 2;
+    this.position_ptr = new_position;
   }
 
   public writeUInt32BE(val: number) {
@@ -50,9 +55,10 @@ export class BinaryWriter {
       `Invalid UInt32 value: ${val}. Must be 0 <= val <= 4_294_967_295`,
     );
 
-    this.resizeIfNeeded(this.position_ptr + 4);
+    const new_position = this.position_ptr + 4;
+    this.growIfNeeded(new_position);
     this.buf.writeUInt32BE(val, this.position_ptr);
-    this.position_ptr += 4;
+    this.position_ptr = new_position;
   }
 
   public writeInt8(val: number) {
@@ -61,9 +67,10 @@ export class BinaryWriter {
       `Invalid Int8 value: ${val}. Must be -128 <= val <= 127`,
     );
 
-    this.resizeIfNeeded(this.position_ptr + 1);
+    const new_position = this.position_ptr + 1;
+    this.growIfNeeded(new_position);
     this.buf.writeInt8(val, this.position_ptr);
-    this.position_ptr += 1;
+    this.position_ptr = new_position;
   }
 
   public writeInt16BE(val: number) {
@@ -72,9 +79,10 @@ export class BinaryWriter {
       `Invalid Int16 value: ${val}. Must be -32678 <= val <= 32677`,
     );
 
-    this.resizeIfNeeded(this.position_ptr + 2);
+    const new_position = this.position_ptr + 2;
+    this.growIfNeeded(new_position);
     this.buf.writeInt16BE(val, this.position_ptr);
-    this.position_ptr += 2;
+    this.position_ptr = new_position;
   }
 
   public writeInt32BE(val: number) {
@@ -83,33 +91,36 @@ export class BinaryWriter {
       `Invalid Int32 value: ${val}. Must be -2_147_483_648 <= val <= 2_147_483_647`,
     );
 
-    this.resizeIfNeeded(this.position_ptr + 4);
+    const new_position = this.position_ptr + 4;
+    this.growIfNeeded(new_position);
     this.buf.writeInt32BE(val, this.position_ptr);
-    this.position_ptr += 4;
+    this.position_ptr = new_position;
   }
 
   public writeBoolean(val: boolean) {
-    this.resizeIfNeeded(this.position_ptr + 1);
+    const new_position = this.position_ptr + 1;
+    this.growIfNeeded(new_position);
     this.buf.writeUint8(val ? 1 : 0, this.position_ptr);
-    this.position_ptr += 1;
+    this.position_ptr = new_position;
   }
 
   public writeString(str: string) {
-    this.resizeIfNeeded(this.position_ptr + str.length);
+    const new_position = this.position_ptr + str.length;
+    this.growIfNeeded(new_position);
     this.buf.write(str, this.position_ptr);
-    this.position_ptr += str.length;
+    this.position_ptr = new_position;
   }
 
-  public resize(size: number) {
-    const buffer = Buffer.alloc(this.curr_size + size);
+  public grow(size: number) {
+    this.curr_size = this.curr_size + size;
+    const buffer = Buffer.alloc(this.curr_size);
     this.buf.copy(buffer);
     this.buf = buffer;
-    this.curr_size += size;
   }
 
-  private resizeIfNeeded(new_position: number) {
+  private growIfNeeded(new_position: number) {
     if (new_position >= this.curr_size) {
-      this.resize(Math.max(1024, new_position - this.curr_size + 1));
+      this.grow(Math.max(this.grow_size, new_position - this.curr_size + 1));
     }
   }
 }

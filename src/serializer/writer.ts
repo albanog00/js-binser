@@ -5,7 +5,7 @@ export class BinaryWriter {
   private curr_size: number;
   private position_ptr = 0;
 
-  private readonly grow_size = 1024;
+  private readonly grow_size = 1 << 20; // 1 MB
 
   constructor(size?: number) {
     size ??= this.grow_size;

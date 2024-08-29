@@ -1,5 +1,8 @@
 import assert = require("assert");
 
+const MAX_INT32 = 0x7fffffff;
+const MIN_INT32 = ~MAX_INT32;
+
 export class BinaryWriter {
   private bufs: Buffer[];
   private position_ptr = 0;
@@ -52,9 +55,9 @@ export class BinaryWriter {
       this.bufs[this.curr_buf_index].writeUInt16BE(val, this.position_ptr);
       this.position_ptr += 2;
     } else {
-      this.bufs[this.curr_buf_index].writeUInt8(val & 8, this.position_ptr);
-      this.grow();
       this.bufs[this.curr_buf_index].writeUInt8(val >> 8, this.position_ptr);
+      this.grow();
+      this.bufs[this.curr_buf_index].writeUInt8(val & 8, this.position_ptr);
       this.position_ptr += 1;
     }
   }
@@ -76,11 +79,14 @@ export class BinaryWriter {
       this.position_ptr += 4;
     } else {
       const byte_size = 4 - max_bytes_write_in_buf;
-      this.writeUnsignedNumberBE(val & (8 * byte_size), byte_size);
+      this.writeUnsignedNumberBE(
+        val >> (8 * byte_size),
+        max_bytes_write_in_buf,
+      );
       this.grow();
       this.writeUnsignedNumberBE(
-        val >> (8 * max_bytes_write_in_buf),
-        max_bytes_write_in_buf,
+        val & (0xffffffff >>> (8 * max_bytes_write_in_buf)),
+        byte_size,
       );
       this.position_ptr += byte_size;
     }
@@ -114,16 +120,16 @@ export class BinaryWriter {
       this.bufs[this.curr_buf_index].writeInt16BE(val, this.position_ptr);
       this.position_ptr += 2;
     } else {
-      this.bufs[this.curr_buf_index].writeInt8(val & 8, this.position_ptr);
-      this.grow();
       this.bufs[this.curr_buf_index].writeInt8(val >> 8, this.position_ptr);
+      this.grow();
+      this.bufs[this.curr_buf_index].writeUInt8(val & 8, this.position_ptr);
       this.position_ptr += 1;
     }
   }
 
   public writeInt32BE(val: number) {
     assert(
-      val <= 2_147_483_647 || val >= -2_147_483_648,
+      val <= MAX_INT32 || val >= MIN_INT32,
       `Invalid Int32 value: ${val}. Must be -2_147_483_648 <= val <= 2_147_483_647`,
     );
 
@@ -138,21 +144,19 @@ export class BinaryWriter {
       this.position_ptr += 4;
     } else {
       const byte_size = 4 - max_bytes_write_in_buf;
-      this.writeSignedNumberBE(val & (8 * byte_size), byte_size);
+
+      this.writeSignedNumberBE(val >> (8 * byte_size), max_bytes_write_in_buf);
       this.grow();
-      this.writeSignedNumberBE(
-        val >> (8 * max_bytes_write_in_buf),
-        max_bytes_write_in_buf,
+      this.writeUnsignedNumberBE(
+        val & (0xffffffff >>> (8 * max_bytes_write_in_buf)),
+        byte_size,
       );
       this.position_ptr += byte_size;
     }
   }
 
   public writeBoolean(val: boolean) {
-    const max_bytes_write_in_buf = this.calculateMaxBytesWriteInBuf(1);
-    if (max_bytes_write_in_buf == 0) this.grow();
-    this.bufs[this.curr_buf_index].writeUInt8(val ? 1 : 0, this.position_ptr);
-    this.position_ptr += 1;
+    this.writeUInt8(val ? 1 : 0);
   }
 
   public writeString(str: string) {
@@ -178,13 +182,10 @@ export class BinaryWriter {
         break;
       case 3:
         this.bufs[this.curr_buf_index].writeInt16BE(
-          val & (8 * 2),
+          val >> 8,
           this.position_ptr,
         );
-        this.bufs[this.curr_buf_index].writeInt8(
-          val >> (8 * 2),
-          this.position_ptr,
-        );
+        this.bufs[this.curr_buf_index].writeInt8(val & 0xff, this.position_ptr);
         break;
       case 4:
         this.bufs[this.curr_buf_index].writeInt32BE(val, this.position_ptr);
@@ -202,11 +203,11 @@ export class BinaryWriter {
         break;
       case 3:
         this.bufs[this.curr_buf_index].writeUInt16BE(
-          val & (8 * 2),
+          val >>> 8,
           this.position_ptr,
         );
         this.bufs[this.curr_buf_index].writeUInt8(
-          val >> (8 * 2),
+          val & 0xff,
           this.position_ptr,
         );
         break;

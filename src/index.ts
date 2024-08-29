@@ -4,7 +4,7 @@ import { Person } from "./person";
 const person = new Person(
   "Peppe",
   23,
-  new Array<number>(10_000_000).fill(10_000_000),
+  new Array<number>(10_000_000).fill(Math.pow(2, 31) - 1),
 );
 
 const buffer = BinarySerializer.encode(person);

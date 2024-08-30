@@ -16,11 +16,11 @@ export class BinaryWriter {
   }
 
   public get data() {
-    return Buffer.concat(this.bufs);
+    return Buffer.concat(this.bufs).subarray(0, this.length);
   }
 
   public get length() {
-    return this.curr_buf_index * this.grow_size + this.position_ptr;
+    return this.curr_buf_index * this.grow_size + this.position_ptr - 1;
   }
 
   public get position() {

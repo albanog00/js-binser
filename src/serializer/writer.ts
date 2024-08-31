@@ -20,7 +20,7 @@ export class BinaryWriter {
   }
 
   public get length() {
-    return this.curr_buf_index * this.grow_size + this.position_ptr - 1;
+    return this.curr_buf_index * this.grow_size + this.position_ptr;
   }
 
   public get position() {
